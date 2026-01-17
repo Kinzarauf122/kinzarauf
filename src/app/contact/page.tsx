@@ -1,8 +1,46 @@
+"use client";
+import React, { useState } from "react";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export default function Contact() {
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        message: ""
+    });
+    const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setStatus("loading");
+
+        try {
+            const res = await fetch("/api/contact", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (res.ok) {
+                setStatus("success");
+                setFormData({ name: "", email: "", message: "" });
+            } else {
+                setStatus("error");
+            }
+        } catch (error) {
+            console.error("Error submitting form", error);
+            setStatus("error");
+        }
+    };
+
     return (
         <>
             <Navbar />
@@ -43,20 +81,60 @@ export default function Contact() {
                     </p>
 
                     <div className="card animate-fade-in delay-200" style={{ maxWidth: "600px", margin: "0 auto", textAlign: "left" }}>
-                        <form style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                             <div>
-                                <label style={{ display: "block", marginBottom: "0.5rem", color: "#ccc" }}>Name</label>
-                                <input type="text" style={{ width: "100%", padding: "1rem", background: "#000", border: "1px solid #333", color: "#fff", borderRadius: "8px" }} placeholder="Your Name" />
+                                <label htmlFor="name" style={{ display: "block", marginBottom: "0.5rem", color: "#ccc" }}>Name</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    id="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    required
+                                    style={{ width: "100%", padding: "1rem", background: "#000", border: "1px solid #333", color: "#fff", borderRadius: "8px" }}
+                                    placeholder="Your Name"
+                                />
                             </div>
                             <div>
-                                <label style={{ display: "block", marginBottom: "0.5rem", color: "#ccc" }}>Email</label>
-                                <input type="email" style={{ width: "100%", padding: "1rem", background: "#000", border: "1px solid #333", color: "#fff", borderRadius: "8px" }} placeholder="your@email.com" />
+                                <label htmlFor="email" style={{ display: "block", marginBottom: "0.5rem", color: "#ccc" }}>Email</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    id="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                    style={{ width: "100%", padding: "1rem", background: "#000", border: "1px solid #333", color: "#fff", borderRadius: "8px" }}
+                                    placeholder="your@email.com"
+                                />
                             </div>
                             <div>
-                                <label style={{ display: "block", marginBottom: "0.5rem", color: "#ccc" }}>Message</label>
-                                <textarea rows={5} style={{ width: "100%", padding: "1rem", background: "#000", border: "1px solid #333", color: "#fff", borderRadius: "8px" }} placeholder="Tell me about your project..."></textarea>
+                                <label htmlFor="message" style={{ display: "block", marginBottom: "0.5rem", color: "#ccc" }}>Message</label>
+                                <textarea
+                                    name="message"
+                                    id="message"
+                                    value={formData.message}
+                                    onChange={handleChange}
+                                    required
+                                    rows={5}
+                                    style={{ width: "100%", padding: "1rem", background: "#000", border: "1px solid #333", color: "#fff", borderRadius: "8px" }}
+                                    placeholder="Tell me about your project..."
+                                ></textarea>
                             </div>
-                            <button type="submit" className="btn" style={{ width: "100%", marginTop: "1rem" }}>Send Message</button>
+                            <button
+                                type="submit"
+                                className="btn"
+                                disabled={status === "loading"}
+                                style={{ width: "100%", marginTop: "1rem", opacity: status === "loading" ? 0.7 : 1 }}
+                            >
+                                {status === "loading" ? "Sending..." : "Send Message"}
+                            </button>
+                            {status === "success" && (
+                                <p style={{ color: "green", textAlign: "center", marginTop: "1rem" }}>Message sent successfully!</p>
+                            )}
+                            {status === "error" && (
+                                <p style={{ color: "red", textAlign: "center", marginTop: "1rem" }}>Failed to send message. Please try again.</p>
+                            )}
                         </form>
                     </div>
 
